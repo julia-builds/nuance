@@ -50,6 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, password: string, name?: string) => {
+    console.log("NAME: ", name)
     const displayName = name?.trim() || email.split("@")[0];
     const { error } = await supabase.auth.signUp({
       email,

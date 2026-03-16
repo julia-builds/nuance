@@ -182,7 +182,7 @@ export function useProgress() {
       active = false;
       supabase.removeChannel(channel);
     };
-  }, [user.id, fetchAll, user]);
+  }, [user, fetchAll]);
   // useEffect(() => {
   //   if (!user) return;
   //   const channel = supabase
