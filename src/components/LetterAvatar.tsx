@@ -15,7 +15,7 @@ const sizeMap = {
 const LetterAvatar = ({ name, email, avatarUrl, size = "md", className = "" }: LetterAvatarProps) => {
   const display = name || email || "?";
   const letter = display.charAt(0).toUpperCase();
-
+  
   if (avatarUrl) {
     return (
       <div className={`rounded-full overflow-hidden shrink-0 ${sizeMap[size]} ${className}`}>

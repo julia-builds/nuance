@@ -62,7 +62,7 @@ const Auth = () => {
     }
     setForgotLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-      redirectTo: `${window.location.origin}/reset-password`
+      redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}reset-password`
     });
     setForgotLoading(false);
     if (error) {
@@ -91,7 +91,7 @@ const Auth = () => {
       return;
     }
     setLoading(true);
-    const { error } = await signUp(signUpEmail, signUpPassword);
+    const { error } = await signUp(signUpEmail, signUpPassword, signUpName);
     setLoading(false);
     if (error) {
       toast({ title: "Couldn't create your account", description: "This email may already be registered. Try signing in instead.", variant: "destructive" });

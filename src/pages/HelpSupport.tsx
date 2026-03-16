@@ -42,7 +42,7 @@ const HelpSupport = () => {
 
     setSending(true);
     try {
-      const { error } = await supabase.functions.invoke("send-contact", {
+      const { error } = await supabase.functions.invoke("send-contact-email", {
         body: { name: trimName, email: trimEmail, message: trimMessage },
       });
       if (error) throw error;

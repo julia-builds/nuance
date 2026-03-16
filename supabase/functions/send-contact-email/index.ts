@@ -1,5 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
 const RECIPIENT = "juliet1903@gmail.com";
 
 const corsHeaders = {
@@ -7,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -22,7 +20,6 @@ serve(async (req) => {
       });
     }
 
-    // Validate lengths
     if (name.length > 100 || email.length > 255 || message.length > 1000) {
       return new Response(JSON.stringify({ error: "Input too long" }), {
         status: 400,
@@ -30,7 +27,6 @@ serve(async (req) => {
       });
     }
 
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return new Response(JSON.stringify({ error: "Invalid email" }), {
@@ -39,18 +35,10 @@ serve(async (req) => {
       });
     }
 
-    // Use Supabase's built-in SMTP via the Auth admin API to send notification
-    // Since we don't have a dedicated email service, we'll use the Resend integration
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    
     if (!RESEND_API_KEY) {
-      console.log("Contact form submission (no email service configured):");
-      console.log(`From: ${name} <${email}>`);
-      console.log(`To: ${RECIPIENT}`);
-      console.log(`Message: ${message}`);
-      
-      // Still return success - the message is logged
-      return new Response(JSON.stringify({ success: true, note: "Message logged" }), {
+      return new Response(JSON.stringify({ error: "Email service not configured" }), {
+        status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -62,7 +50,7 @@ serve(async (req) => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Nuance AI Language App <onboarding@resend.dev>",
+        from: "Nuance Contact <onboarding@resend.dev>",
         to: [RECIPIENT],
         subject: `Nuance Contact: ${name}`,
         reply_to: email,
@@ -81,7 +69,7 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Contact form error:", error);
-    return new Response(JSON.stringify({ error: "Failed to process" }), {
+    return new Response(JSON.stringify({ error: "Failed to send message" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

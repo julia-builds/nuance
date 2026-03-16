@@ -17,7 +17,7 @@ const Footer = () => {
     if (!name.trim() || !email.trim() || !message.trim()) return;
     setSending(true);
     try {
-      const { error } = await supabase.functions.invoke("send-contact", {
+      const { error } = await supabase.functions.invoke("send-contact-email", {
         body: { name: name.trim(), email: email.trim(), message: message.trim() },
       });
       if (error) throw error;

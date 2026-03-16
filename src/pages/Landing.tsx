@@ -13,7 +13,7 @@ const Landing = () => {
   const navigate = useNavigate();
   const { enterGuestMode, user, profile } = useAuth();
   const showcaseRef = useRef<HTMLDivElement>(null);
-
+  
   const { scrollYProgress } = useScroll({
     target: showcaseRef,
     offset: ["start end", "end start"],
@@ -45,7 +45,7 @@ const Landing = () => {
     enterGuestMode();
     navigate("/dashboard");
   };
-  console.log("USER: ", user);
+ 
   return (
     <motion.div
       className="min-h-screen bg-background text-foreground"

@@ -41,7 +41,7 @@ function computeStreak(dates: string[]): number {
   if (unique[0] !== todayStr && unique[0] !== yesterdayStr) return 1;
 
   let streak = 0;
-  let check = unique[0] === todayStr ? new Date(today) : new Date(yesterday);
+  const check = unique[0] === todayStr ? new Date(today) : new Date(yesterday);
 
   for (const dateStr of unique) {
     const checkStr = check.toISOString().slice(0, 10);
@@ -107,35 +107,44 @@ export function useProgress() {
 
     // Update streak in DB if changed
     if (profile && streak !== profile.streak_days) {
-      await supabase.from("profiles").update({
-        streak_days: streak,
-        last_active_date: new Date().toISOString().slice(0, 10),
-      }).eq("id", user.id);
+      await supabase
+        .from("profiles")
+        .update({
+          streak_days: streak,
+          last_active_date: new Date().toISOString().slice(0, 10),
+        })
+        .eq("id", user.id);
     }
 
     // Compute vibe_iq as average of user-input scores from translator & scenarios
     const userVibeScores = activities
-      .filter((a) =>
-        (a.activity_type === "translation_complete" || a.activity_type === "scenario_complete") &&
-        a.vibe_score !== null && a.vibe_score !== undefined
+      .filter(
+        (a) =>
+          (a.activity_type === "translation_complete" || a.activity_type === "scenario_complete") &&
+          a.vibe_score !== null &&
+          a.vibe_score !== undefined,
       )
       .map((a) => a.vibe_score!);
-    const averageVibeIq = userVibeScores.length > 0
-      ? Math.round(userVibeScores.reduce((sum, s) => sum + s, 0) / userVibeScores.length)
-      : 0;
+    const averageVibeIq =
+      userVibeScores.length > 0
+        ? Math.round(userVibeScores.reduce((sum, s) => sum + s, 0) / userVibeScores.length)
+        : 0;
 
     // Update vibe_iq in DB if changed
     if (profile && averageVibeIq !== profile.vibe_iq) {
-      await supabase.from("profiles").update({
-        vibe_iq: averageVibeIq,
-      }).eq("id", user.id);
+      await supabase
+        .from("profiles")
+        .update({
+          vibe_iq: averageVibeIq,
+        })
+        .eq("id", user.id);
     }
 
     setData({
       vibeIq: averageVibeIq,
-      xp: (profile as any)?.xp ?? 0,
-      lessonsCompleted: (profile as any)?.lessons_completed ?? 0,
-      modulesCompleted: (profile as any)?.modules_completed ?? 0,
+      xp: profile?.xp ?? 0,
+      lessonsCompleted: profile?.lessons_completed ?? 0,
+      modulesCompleted: profile?.modules_completed ?? 0,
       streakDays: streak,
       learningLevel: profile?.learning_level ?? 1,
       activeDays,
@@ -144,7 +153,7 @@ export function useProgress() {
       completedModules,
       loading: false,
     });
-  }, [user?.id]);
+  }, [user]);
 
   useEffect(() => {
     fetchAll();
@@ -153,24 +162,42 @@ export function useProgress() {
   // Realtime subscription
   useEffect(() => {
     if (!user) return;
+    let active = true;
     const channel = supabase
       .channel("activity-changes")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "activity_log", filter: `user_id=eq.${user.id}` },
-        () => fetchAll()
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "activity_log",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          if (active) fetchAll();
+        },
       )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [user?.id, fetchAll]);
+    return () => {
+      active = false;
+      supabase.removeChannel(channel);
+    };
+  }, [user.id, fetchAll, user]);
+  // useEffect(() => {
+  //   if (!user) return;
+  //   const channel = supabase
+  //     .channel("activity-changes")
+  //     .on(
+  //       "postgres_changes",
+  //       { event: "INSERT", schema: "public", table: "activity_log", filter: `user_id=eq.${user.id}` },
+  //       () => fetchAll()
+  //     )
+  //     .subscribe();
+  //   return () => { supabase.removeChannel(channel); };
+  // }, [user.id, fetchAll, user]);
 
   const logActivity = useCallback(
-    async (
-      activityType: string,
-      moduleId: string,
-      lessonId?: string,
-      vibeScore?: number
-    ) => {
+    async (activityType: string, moduleId: string, lessonId?: string, vibeScore?: number) => {
       if (!user) return;
 
       await supabase.from("activity_log").insert({
@@ -182,7 +209,13 @@ export function useProgress() {
       });
 
       // Update profile counters
-      const updates: Record<string, any> = {
+      const updates: {
+        last_active_date: string;
+        lessons_completed?: number;
+        modules_completed?: number;
+        learning_level?: number;
+        xp?: number;
+      } = {
         last_active_date: new Date().toISOString().slice(0, 10),
       };
 
@@ -197,7 +230,10 @@ export function useProgress() {
         const newModules = (data.modulesCompleted || 0) + 1;
         updates.learning_level = Math.min(4, Math.floor(newModules / 2) + 1);
       }
-      if ((activityType === "scenario_complete" || activityType === "translation_complete") && vibeScore) {
+      if (
+        (activityType === "scenario_complete" || activityType === "translation_complete") &&
+        vibeScore
+      ) {
         // vibe_iq will be recalculated on next fetchAll via realtime
         updates.xp = (data.xp || 0) + 50;
       }
@@ -205,7 +241,7 @@ export function useProgress() {
       await supabase.from("profiles").update(updates).eq("id", user.id);
       // Realtime will trigger fetchAll
     },
-    [user, data]
+    [user, data],
   );
 
   return { ...data, logActivity, refetch: fetchAll };

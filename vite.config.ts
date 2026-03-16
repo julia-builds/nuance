@@ -5,15 +5,6 @@ import { componentTagger } from "lovable-tagger";
 
 const base = "/nuance/";
 
-// const rewritePublicPaths = (): Plugin => ({
-//   name: "rewrite-public-paths",
-//   transform(code, id) {
-//     if (id.includes("node_modules") || !/\.[jt]sx?$/.test(id)) return;
-//     if (!code.includes('"/images/')) return;
-//     return { code: code.replaceAll('"/images/', `"${base}images/`) };
-//   },
-// });
-
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   base: mode === "production" ? base : "/",
