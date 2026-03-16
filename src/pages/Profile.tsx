@@ -198,7 +198,9 @@ const Profile = () => {
         <h1 className="text-lg font-semibold">Profile</h1>
       </header>
 
-      <main className="relative space-y-6 overflow-hidden px-5 pb-8 md:mx-auto md:w-full md:max-w-[900px]">
+      <main className="space-y-6 overflow-hidden px-5 pb-8 md:mx-auto md:w-full md:max-w-[900px]">
+        <div className="relative flex-1">
+
         {showBanner && <LoginBanner className="-top-2" />}
 
         <section className="flex flex-col items-center pt-2 text-center">
@@ -216,7 +218,7 @@ const Profile = () => {
                 email={showBanner ? undefined : user?.email}
                 avatarUrl={showBanner ? undefined : profile?.avatar_url}
                 size="lg"
-              />
+                />
             </div>
             {!showBanner && (
               <>
@@ -242,16 +244,16 @@ const Profile = () => {
                     </button>
                     {profile?.avatar_url && (
                       <button
-                        onClick={async () => {
-                          setShowAvatarMenu(false);
-                          if (!user) return;
-                          setUploadingAvatar(true);
-                          await supabase.storage.from("avatars").remove([`${user.id}/avatar`]);
+                      onClick={async () => {
+                        setShowAvatarMenu(false);
+                        if (!user) return;
+                        setUploadingAvatar(true);
+                        await supabase.storage.from("avatars").remove([`${user.id}/avatar`]);
                           const { error } = await supabase
                             .from("profiles")
                             .update({ avatar_url: null })
                             .eq("id", user.id);
-                          setUploadingAvatar(false);
+                            setUploadingAvatar(false);
                           if (error) {
                             toast.error("Failed to remove photo");
                           } else {
@@ -260,7 +262,7 @@ const Profile = () => {
                           }
                         }}
                         className="flex w-full items-center gap-2 px-4 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-muted"
-                      >
+                        >
                         <Trash2 className="h-4 w-4" />
                         Remove photo
                       </button>
@@ -291,13 +293,13 @@ const Profile = () => {
                   if (e.key === "Enter") handleSaveName();
                   if (e.key === "Escape") setEditingName(false);
                 }}
-              />
+                />
 
               <button
                 onClick={handleSaveName}
                 disabled={savingName}
                 className="rounded-lg bg-cta px-3 py-1.5 text-sm font-medium text-cta-foreground disabled:opacity-50"
-              >
+                >
                 {savingName ? "..." : "Save"}
               </button>
               <button
@@ -337,8 +339,8 @@ const Profile = () => {
         <section className="grid grid-cols-3 gap-3">
           {quickStats.map((stat) => (
             <div
-              key={stat.label}
-              className="flex flex-col items-center rounded-2xl bg-card p-4 text-center shadow-sm"
+            key={stat.label}
+            className="flex flex-col items-center rounded-2xl bg-card p-4 text-center shadow-sm"
             >
               <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
                 <stat.icon className="h-5 w-5 text-muted-foreground" />
@@ -348,6 +350,7 @@ const Profile = () => {
             </div>
           ))}
         </section>
+            </div>
 
         <section>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">

@@ -1,52 +1,40 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, RotateCcw, Check, Brain, PartyPopper, HelpCircle } from "lucide-react";
+import { ArrowLeft, RotateCcw, Check, PartyPopper } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
-import { useReview, ReviewCard, ReviewRating } from "@/hooks/useReview";
+import { useReview, IReviewCard, ReviewRating } from "@/hooks/useReview";
 import { useAuth } from "@/hooks/useAuth";
+import LoginBanner from "@/components/LoginBanner";
+import { useProgress } from "@/hooks/useProgress";
+import { modules } from "@/data/modules";
+import { ReviewCard } from "@/components/review/ReviewCard";
+import { ReviewProgressBar } from "@/components/review/ReviewProgressBar";
 
-const ratingConfig: { value: ReviewRating; label: string; color: string; desc: string }[] = [
-  {
-    value: "again",
-    label: "Again",
-    color: "bg-destructive/10 text-destructive border-destructive/20",
-    desc: "Forgot",
-  },
-  {
-    value: "hard",
-    label: "Hard",
-    color:
-      "bg-[hsl(var(--vibe-blunt))]/10 text-[hsl(var(--vibe-blunt))] border-[hsl(var(--vibe-blunt))]/20",
-    desc: "Struggled",
-  },
-  { value: "good", label: "Good", color: "bg-cta/10 text-cta border-cta/20", desc: "Recalled" },
-  {
-    value: "easy",
-    label: "Easy",
-    color: "bg-accent/10 text-accent border-accent/20",
-    desc: "Instant",
-  },
-];
+const GUEST_CARD: IReviewCard = {
+  id: "guest-preview",
+  module_id: "small-talk",
+  lesson_id: "greetings",
+  card_type: "vocab",
+  card_front: "How do you say 'Nice to meet you'?",
+  card_back: "Mucho gusto — used when meeting someone for the first time.",
+  ease_factor: 2.5,
+  interval_days: 1,
+  repetitions: 0,
+  next_review_at: "",
+};
 
 const Review = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { isGuest, user } = useAuth();
+
   const { dueCards, totalCards, loading, reviewCard } = useReview();
   const [flipped, setFlipped] = useState(false);
   const [reviewedCount, setReviewedCount] = useState(0);
   const [animatingOut, setAnimatingOut] = useState(false);
+  const { nextLesson } = useProgress();
 
-  if (!user) {
-    return (
-      <AppLayout>
-        <div className="flex min-h-[60vh] flex-col items-center justify-center px-5">
-          <HelpCircle className="mb-4 h-12 w-12 text-muted-foreground/30" />
-          <p className="text-center text-muted-foreground">Sign in to access your review cards.</p>
-        </div>
-      </AppLayout>
-    );
-  }
+  const continueModule = isGuest || !nextLesson ? modules[0] : nextLesson.module;
 
   if (loading) {
     return (
@@ -60,6 +48,7 @@ const Review = () => {
 
   const currentCard = dueCards[0];
   const totalDue = dueCards.length + reviewedCount;
+  const hasCards = totalCards > 0;
 
   const handleRate = async (rating: ReviewRating) => {
     if (!currentCard || animatingOut) return;
@@ -84,107 +73,46 @@ const Review = () => {
         </div>
       </header>
 
-      <main className="px-5 pb-24 md:mx-auto md:w-full md:max-w-[900px]">
+      <main className="relative px-5 pb-24 md:mx-auto md:w-full md:max-w-[900px]">
+        {!user && <LoginBanner className="-top-2" />}
+
         {/* Progress bar */}
-        {totalDue > 0 && (
-          <div className="mb-6">
-            <div className="mb-1.5 flex justify-between text-xs text-muted-foreground">
-              <span>{reviewedCount} reviewed</span>
-              <span>{dueCards.length} remaining</span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-secondary">
-              <motion.div
-                className="h-full rounded-full bg-cta"
-                initial={{ width: 0 }}
-                animate={{ width: totalDue > 0 ? `${(reviewedCount / totalDue) * 100}%` : "0%" }}
-                transition={{ duration: 0.4 }}
-              />
-            </div>
-          </div>
+        {totalDue > 0 || isGuest && (
+          <ReviewProgressBar reviewedCount={reviewedCount} totalDue={totalDue} />
+          // <div className="mb-6">
+          //   <div className="mb-1.5 flex justify-between text-xs text-muted-foreground">
+          //     <span>{reviewedCount} reviewed</span>
+          //     <span>{dueCards.length} remaining</span>
+          //   </div>
+          //   <div className="h-2 overflow-hidden rounded-full bg-secondary">
+          //     <motion.div
+          //       className="h-full rounded-full bg-cta"
+          //       initial={{ width: 0 }}
+          //       animate={{ width: totalDue > 0 ? `${(reviewedCount / totalDue) * 100}%` : "0%" }}
+          //       transition={{ duration: 0.4 }}
+          //     />
+          //   </div>
+          // </div>
         )}
 
         <AnimatePresence mode="wait">
-          {currentCard ? (
-            <motion.div
-              key={currentCard.id}
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -30 }}
-              transition={{ duration: 0.25 }}
-            >
-              {/* Card */}
-              <button
-                onClick={() => setFlipped(!flipped)}
-                className="w-full text-left"
-                style={{ perspective: 1000 }}
-              >
-                <motion.div
-                  className="relative min-h-[220px] w-full rounded-2xl shadow-sm"
-                  animate={{ rotateY: flipped ? 180 : 0 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
-                  style={{ transformStyle: "preserve-3d" }}
-                >
-                  {/* Front */}
-                  <div
-                    className="absolute inset-0 flex flex-col justify-center rounded-2xl border border-border bg-card p-6"
-                    style={{ backfaceVisibility: "hidden" }}
-                  >
-                    <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      {currentCard.module_id.replace(/-/g, " ")}
-                    </p>
-                    <p className="text-lg font-medium leading-relaxed">{currentCard.card_front}</p>
-                    <p className="mt-4 flex items-center gap-1.5 text-sm text-muted-foreground/50">
-                      <RotateCcw className="h-3.5 w-3.5" /> Tap to reveal
-                    </p>
-                  </div>
-
-                  {/* Back */}
-                  <div
-                    className="absolute inset-0 flex flex-col justify-center rounded-2xl border border-cta/20 bg-cta/5 p-6"
-                    style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
-                  >
-                    <p className="text-lg leading-relaxed">{currentCard.card_back}</p>
-                  </div>
-                </motion.div>
-              </button>
-
-              {/* Rating buttons — only show when flipped */}
-              <AnimatePresence>
-                {flipped && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="mt-6"
-                  >
-                    <p className="mb-3 text-center text-sm text-muted-foreground">
-                      How well did you remember?
-                    </p>
-                    <div className="grid grid-cols-4 gap-2">
-                      {ratingConfig.map((r) => (
-                        <button
-                          key={r.value}
-                          onClick={() => handleRate(r.value)}
-                          disabled={animatingOut}
-                          className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-sm font-medium transition-all active:scale-95 ${r.color}`}
-                        >
-                          <span className="text-base">{r.label}</span>
-                          <span className="text-xs opacity-70">{r.desc}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Interval info */}
-              <div className="mt-4 text-center">
-                <p className="text-xs text-muted-foreground">
-                  Reviewed {currentCard.repetitions} time{currentCard.repetitions !== 1 ? "s" : ""}{" "}
-                  · Next interval: {currentCard.interval_days}d
-                </p>
-              </div>
-            </motion.div>
+          {isGuest ? (
+            <ReviewCard
+              key="guest-preview"
+              currentCard={GUEST_CARD}
+              setFlipped={() => {}}
+              flipped={true}
+              handleRate={() => {}}
+              animatingOut={false}
+            />
+          ) : currentCard ? (
+            <ReviewCard
+              currentCard={currentCard}
+              setFlipped={setFlipped}
+              flipped={flipped}
+              handleRate={handleRate}
+              animatingOut={animatingOut}
+            />
           ) : (
             <motion.div
               key="done"
@@ -207,17 +135,17 @@ const Review = () => {
                 <>
                   <h2 className="mb-2 text-2xl font-semibold">No cards due</h2>
                   <p className="mb-2 max-w-xs text-base text-muted-foreground">
-                    {totalCards > 0
+                    {hasCards
                       ? "All your cards are reviewed. Check back later!"
                       : "Complete lessons to build your review deck. Flashcards from each lesson will appear here automatically."}
                   </p>
                 </>
               )}
               <button
-                onClick={() => navigate("/dashboard")}
+                onClick={() => navigate(`/module/${continueModule.id}`)}
                 className="mt-6 rounded-xl bg-cta px-8 py-3 text-sm font-semibold text-cta-foreground"
               >
-                Back to Dashboard
+                {hasCards ? "Continue Learning" : "Start Learning"}
               </button>
             </motion.div>
           )}

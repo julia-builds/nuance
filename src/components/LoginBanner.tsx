@@ -14,7 +14,7 @@ const LoginBanner = ({ className = "" }: LoginBannerProps) => {
         <div className="w-10 h-10 rounded-full bg-cta/15 flex items-center justify-center">
           <Lock className="w-5 h-5 text-cta" />
         </div>
-        <p className="text-sm font-semibold text-foreground">Login to Save Progress</p>
+        <p className="text-sm font-semibold text-foreground">Create free account to save progress</p>
         <button
           onClick={(e) => {
             e.stopPropagation();

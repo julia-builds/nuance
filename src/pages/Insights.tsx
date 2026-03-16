@@ -126,20 +126,20 @@ const Insights = () => {
   return (
     <AppLayout>
       {/* Header */}
-      <header className="flex items-center gap-3 px-5 pt-6 pb-4 md:max-w-[900px] md:mx-auto md:w-full">
-        <button onClick={() => navigate("/")} className="p-2 -ml-2 rounded-full">
-          <ArrowLeft className="w-5 h-5" />
+      <header className="flex items-center gap-3 px-5 pb-4 pt-6 md:mx-auto md:w-full md:max-w-[900px]">
+        <button onClick={() => navigate("/")} className="-ml-2 rounded-full p-2">
+          <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-lg font-semibold">Insights</h1>
       </header>
 
-      <main className="px-5 space-y-6 pb-8 md:max-w-[900px] md:mx-auto md:w-full">
+      <main className="relative space-y-6 px-5 pb-8 md:mx-auto md:w-full md:max-w-[900px]">
+          {showBanner && <LoginBanner />}
         {/* ========= HERO: Vibe IQ Mastery + Tone Profile (side by side) ========= */}
-        <div className="relative grid grid-cols-1 md:grid-cols-2 gap-4">
-            {showBanner && <LoginBanner />}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* Left card: Vibe IQ Mastery */}
-          <section className="bg-card rounded-2xl p-6 shadow-sm relative">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+          <section className="relative rounded-2xl bg-card p-6 shadow-sm">
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               Vibe IQ Mastery
             </h2>
 
@@ -150,24 +150,24 @@ const Insights = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="flex justify-center mt-5">
-
-              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-accent/15 text-accent text-sm font-semibold">
-                <TrendingUp className="w-4 h-4" />
+              className="mt-5 flex justify-center"
+            >
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-4 py-2 text-sm font-semibold text-accent">
+                <TrendingUp className="h-4 w-4" />
                 Impact Growth: +{IMPACT_GROWTH}%
               </span>
             </motion.div>
           </section>
 
           {/* Right card: Tone Profile */}
-          <section className="bg-card rounded-2xl p-6 shadow-sm flex flex-col justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+          <section className="flex flex-col justify-between rounded-2xl bg-card p-6 shadow-sm">
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               Tone Profile
             </h2>
 
             {(() => {
               const translations = activityLog.filter(
-                (a) => a.activity_type === "translation_complete" && a.tone_mode
+                (a) => a.activity_type === "translation_complete" && a.tone_mode,
               );
               const leaderCount = translations.filter((a) => a.tone_mode === "leader").length;
               const colleagueCount = translations.filter((a) => a.tone_mode === "colleague").length;
@@ -175,27 +175,27 @@ const Insights = () => {
 
               if (total === 0) {
                 return (
-                  <div className="flex flex-col items-center justify-center flex-1 py-8 text-center">
-                    <div className="w-24 h-24 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center mb-3">
+                  <div className="flex flex-1 flex-col items-center justify-center py-8 text-center">
+                    <div className="mb-3 flex h-24 w-24 items-center justify-center rounded-full border-2 border-dashed border-muted-foreground/30">
                       <span className="text-2xl text-muted-foreground/40">?</span>
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Use the Social Translator to see your tone profile
                     </p>
-                  </div>);
-
+                  </div>
+                );
               }
-              const leaderPct = Math.round(leaderCount / total * 100);
+              const leaderPct = Math.round((leaderCount / total) * 100);
               const colleaguePct = 100 - leaderPct;
               const toneData = [
-              { name: "Leader Mode", value: leaderPct },
-              { name: "Colleague Mode", value: colleaguePct }];
-
+                { name: "Leader Mode", value: leaderPct },
+                { name: "Colleague Mode", value: colleaguePct },
+              ];
 
               return (
                 <>
-                  <div className="flex items-center gap-6 flex-1 mb-6">
-                    <div className="w-32 h-32 shrink-0">
+                  <div className="mb-6 flex flex-1 items-center gap-6">
+                    <div className="h-32 w-32 shrink-0">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
@@ -205,111 +205,111 @@ const Insights = () => {
                             innerRadius={38}
                             outerRadius={56}
                             dataKey="value"
-                            strokeWidth={0}>
-
-                            {toneData.map((_, idx) =>
-                            <Cell key={idx} fill={TONE_COLORS[idx]} />
-                            )}
+                            strokeWidth={0}
+                          >
+                            {toneData.map((_, idx) => (
+                              <Cell key={idx} fill={TONE_COLORS[idx]} />
+                            ))}
                           </Pie>
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
 
-                    <div className="space-y-3 flex-1">
-                      {toneData.map((entry, idx) =>
-                      <div key={entry.name} className="flex items-center justify-between">
+                    <div className="flex-1 space-y-3">
+                      {toneData.map((entry, idx) => (
+                        <div key={entry.name} className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <div
-                            className="w-2.5 h-2.5 rounded-full shrink-0"
-                            style={{ backgroundColor: TONE_COLORS[idx] }} />
+                              className="h-2.5 w-2.5 shrink-0 rounded-full"
+                              style={{ backgroundColor: TONE_COLORS[idx] }}
+                            />
 
                             <span className="text-sm font-normal">{entry.name}</span>
                           </div>
                           <span className="text-sm font-bold">{entry.value}%</span>
                         </div>
-                      )}
+                      ))}
                     </div>
                   </div>
 
                   <div>
-                    <p className="text-muted-foreground text-sm">
-                      Leader Mode uses the SBI Model
-                    </p>
-                    <p className="text-muted-foreground mt-1 text-sm">
+                    <p className="text-sm text-muted-foreground">Leader Mode uses the SBI Model</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
                       Colleague Mode uses Subjective Framing
                     </p>
                   </div>
-                </>);
-
+                </>
+              );
             })()}
           </section>
         </div>
 
-        {!showBanner &&
-        <section>
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-            Learning Metrics
-          </h2>
+        {!showBanner && (
+          <section>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Learning Metrics
+            </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {/* First-Time Accuracy */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-card rounded-2xl p-5 shadow-sm flex flex-col items-center text-center">
-              
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-3">
-                <Target className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <span className="text-2xl font-semibold">{firstTimeAccuracy}%</span>
-              <span className="mt-1 text-secondary-foreground font-normal text-base">First-Time Accuracy</span>
-               <span className="text-muted-foreground mt-0.5 text-sm">
-                Tasks passed without Redo
-              </span>
-            </motion.div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {/* First-Time Accuracy */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-col items-center rounded-2xl bg-card p-5 text-center shadow-sm"
+              >
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                  <Target className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <span className="text-2xl font-semibold">{firstTimeAccuracy}%</span>
+                <span className="mt-1 text-base font-normal text-secondary-foreground">
+                  First-Time Accuracy
+                </span>
+                <span className="mt-0.5 text-sm text-muted-foreground">
+                  Tasks passed without Redo
+                </span>
+              </motion.div>
 
-            {/* Learning Time */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35 }}
-              className="bg-card rounded-2xl p-5 shadow-sm flex flex-col items-center text-center">
-              
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-3">
-                <Clock className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <span className="text-2xl font-semibold">{learningHours}h {learningMins}m</span>
-              <span className="mt-1 text-secondary-foreground text-base">Learning Time</span>
-               <span className="text-muted-foreground mt-0.5 text-sm">
-                Total hours invested
-              </span>
-            </motion.div>
+              {/* Learning Time */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
+                className="flex flex-col items-center rounded-2xl bg-card p-5 text-center shadow-sm"
+              >
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                  <Clock className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <span className="text-2xl font-semibold">
+                  {learningHours}h {learningMins}m
+                </span>
+                <span className="mt-1 text-base text-secondary-foreground">Learning Time</span>
+                <span className="mt-0.5 text-sm text-muted-foreground">Total hours invested</span>
+              </motion.div>
 
-            {/* Mastery Average */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="bg-card rounded-2xl p-5 shadow-sm flex flex-col items-center text-center">
-              
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-3">
-                <Zap className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <span className="text-2xl font-semibold">{masteryAverage}/5</span>
-              <span className="mt-1 text-secondary-foreground text-base">Mastery Average</span>
-               <span className="text-muted-foreground mt-0.5 text-sm">
-                Mean scenario score
-              </span>
-            </motion.div>
-          </div>
-        </section>
-        }
+              {/* Mastery Average */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="flex flex-col items-center rounded-2xl bg-card p-5 text-center shadow-sm"
+              >
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                  <Zap className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <span className="text-2xl font-semibold">{masteryAverage}/5</span>
+                <span className="mt-1 text-base text-secondary-foreground">Mastery Average</span>
+                <span className="mt-0.5 text-sm text-muted-foreground">Mean scenario score</span>
+              </motion.div>
+            </div>
+          </section>
+        )}
 
         {/* Leaderboard */}
         {!showBanner && <Leaderboard />}
       </main>
-    </AppLayout>);
+    </AppLayout>
+  );
 
 };
 

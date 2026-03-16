@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProgress } from "@/hooks/useProgress";
 import { modules } from "@/data/modules";
 
-export interface ReviewCard {
+export interface IReviewCard {
   id: string;
   module_id: string;
   lesson_id: string;
@@ -20,8 +20,8 @@ export interface ReviewCard {
 export type ReviewRating = "again" | "hard" | "good" | "easy";
 
 function computeNextReview(
-  card: ReviewCard,
-  rating: ReviewRating
+  card: IReviewCard,
+  rating: ReviewRating,
 ): { ease_factor: number; interval_days: number; repetitions: number; next_review_at: string } {
   const qualityMap: Record<ReviewRating, number> = { again: 0, hard: 2, good: 4, easy: 5 };
   const q = qualityMap[rating];
@@ -57,13 +57,16 @@ function computeNextReview(
 export function useReview() {
   const { user } = useAuth();
   const { completedLessons, completedModules, loading: progressLoading } = useProgress();
-  const [dueCards, setDueCards] = useState<ReviewCard[]>([]);
+  const [dueCards, setDueCards] = useState<IReviewCard[]>([]);
   const [totalCards, setTotalCards] = useState(0);
   const [loading, setLoading] = useState(true);
   const [seeded, setSeeded] = useState(false);
 
   const fetchDueCards = useCallback(async () => {
-    if (!user) { setLoading(false); return; }
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     const now = new Date().toISOString();
     const [dueRes, totalRes] = await Promise.all([
@@ -80,7 +83,7 @@ export function useReview() {
         .eq("user_id", user.id),
     ]);
 
-    setDueCards((dueRes.data as ReviewCard[]) || []);
+    setDueCards((dueRes.data as IReviewCard[]) || []);
     setTotalCards(totalRes.count || 0);
     setLoading(false);
   }, [user]);
@@ -89,7 +92,14 @@ export function useReview() {
   useEffect(() => {
     if (!user || progressLoading || seeded) return;
     const seedAll = async () => {
-      const allCards: { user_id: string; module_id: string; lesson_id: string; card_type: string; card_front: string; card_back: string }[] = [];
+      const allCards: {
+        user_id: string;
+        module_id: string;
+        lesson_id: string;
+        card_type: string;
+        card_front: string;
+        card_back: string;
+      }[] = [];
       for (const mod of modules) {
         for (const lesson of mod.lessons) {
           if (!lesson.flashcards?.length) continue;
@@ -123,44 +133,52 @@ export function useReview() {
     seedAll();
   }, [user, progressLoading, completedLessons, completedModules, seeded, fetchDueCards]);
 
-  useEffect(() => { fetchDueCards(); }, [fetchDueCards]);
+  useEffect(() => {
+    fetchDueCards();
+  }, [fetchDueCards]);
 
-  const reviewCard = useCallback(async (cardId: string, rating: ReviewRating) => {
-    const card = dueCards.find((c) => c.id === cardId);
-    if (!card || !user) return;
+  const reviewCard = useCallback(
+    async (cardId: string, rating: ReviewRating) => {
+      const card = dueCards.find((c) => c.id === cardId);
+      if (!card || !user) return;
 
-    const updates = computeNextReview(card, rating);
+      const updates = computeNextReview(card, rating);
 
-    await supabase
-      .from("review_cards")
-      .update({ ...updates, last_reviewed_at: new Date().toISOString() })
-      .eq("id", cardId);
+      await supabase
+        .from("review_cards")
+        .update({ ...updates, last_reviewed_at: new Date().toISOString() })
+        .eq("id", cardId);
 
-    setDueCards((prev) => prev.filter((c) => c.id !== cardId));
-  }, [dueCards, user]);
+      setDueCards((prev) => prev.filter((c) => c.id !== cardId));
+    },
+    [dueCards, user],
+  );
 
-  const seedCardsForLesson = useCallback(async (moduleId: string, lessonId: string) => {
-    if (!user) return;
+  const seedCardsForLesson = useCallback(
+    async (moduleId: string, lessonId: string) => {
+      if (!user) return;
 
-    const mod = modules.find((m) => m.id === moduleId);
-    const lesson = mod?.lessons.find((l) => l.id === lessonId);
-    if (!lesson?.flashcards?.length) return;
+      const mod = modules.find((m) => m.id === moduleId);
+      const lesson = mod?.lessons.find((l) => l.id === lessonId);
+      if (!lesson?.flashcards?.length) return;
 
-    const cards = lesson.flashcards.map((fc) => ({
-      user_id: user.id,
-      module_id: moduleId,
-      lesson_id: lessonId,
-      card_type: "flashcard",
-      card_front: fc.front,
-      card_back: fc.back,
-    }));
+      const cards = lesson.flashcards.map((fc) => ({
+        user_id: user.id,
+        module_id: moduleId,
+        lesson_id: lessonId,
+        card_type: "flashcard",
+        card_front: fc.front,
+        card_back: fc.back,
+      }));
 
-    // Upsert — ignore duplicates via unique index
-    await supabase.from("review_cards").upsert(cards, {
-      onConflict: "user_id,lesson_id,card_front",
-      ignoreDuplicates: true,
-    });
-  }, [user]);
+      // Upsert — ignore duplicates via unique index
+      await supabase.from("review_cards").upsert(cards, {
+        onConflict: "user_id,lesson_id,card_front",
+        ignoreDuplicates: true,
+      });
+    },
+    [user],
+  );
 
   return { dueCards, totalCards, loading, reviewCard, seedCardsForLesson, refetch: fetchDueCards };
 }

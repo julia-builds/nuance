@@ -1,6 +1,10 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { modules } from "@/data/modules";
+import type { Module, Lesson } from "@/data/modules";
+
+export type NextLesson = { module: Module; lessonIdx: number; lesson: Lesson } | null;
 
 export interface ActivityEntry {
   id: string;
@@ -56,7 +60,7 @@ function computeStreak(dates: string[]): number {
 }
 
 export function useProgress() {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const [data, setData] = useState<ProgressData>({
     vibeIq: 0,
     xp: 0,
@@ -244,5 +248,18 @@ export function useProgress() {
     [user, data],
   );
 
-  return { ...data, logActivity, refetch: fetchAll };
+  const nextLesson = useMemo((): NextLesson => {
+    if (isGuest || !user) return null;
+    for (const mod of modules) {
+      for (let i = 0; i < mod.lessons.length; i++) {
+        if (!data.completedLessons.has(mod.lessons[i].id)) {
+          return { module: mod, lessonIdx: i, lesson: mod.lessons[i] };
+        }
+      }
+    }
+    const lastMod = modules[modules.length - 1];
+    return { module: lastMod, lessonIdx: lastMod.lessons.length - 1, lesson: lastMod.lessons[lastMod.lessons.length - 1] };
+  }, [isGuest, user, data.completedLessons]);
+
+  return { ...data, logActivity, refetch: fetchAll, nextLesson };
 }

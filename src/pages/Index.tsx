@@ -17,7 +17,7 @@ import imageLesson from "@/assets/44f61677-4fd5-49b3-9fbb-eabbecbad3aa.png";
 const Index = () => {
   const navigate = useNavigate();
   const { isGuest, user, profile } = useAuth();
-  const { completedLessons, completedModules, loading: progressLoading } = useProgress();
+  const { nextLesson } = useProgress();
   const { unreadCount } = useNotifications();
   // const showAvatar = user;
   const showAvatar = !isGuest && user;
@@ -46,19 +46,6 @@ const Index = () => {
     };
   }, []);
 
-  // Find next lesson for registered users
-  const nextLesson = useMemo(() => {
-    if (isGuest || !user) return null;
-    for (const mod of modules) {
-      for (let i = 0; i < mod.lessons.length; i++) {
-        if (!completedLessons.has(mod.lessons[i].id)) {
-          return { module: mod, lessonIdx: i, lesson: mod.lessons[i] };
-        }
-      }
-    }
-    const lastMod = modules[modules.length - 1];
-    return { module: lastMod, lessonIdx: lastMod.lessons.length - 1, lesson: lastMod.lessons[lastMod.lessons.length - 1] };
-  }, [isGuest, user, completedLessons]);
 
   const continueModule = isGuest || !nextLesson ? modules[0] : nextLesson.module;
   const continueTitle = isGuest ? "Start Learning" : "Continue where you left";
