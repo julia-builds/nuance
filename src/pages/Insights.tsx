@@ -96,9 +96,9 @@ const VibeMeter = ({ score }: { score: number }) => {
 
 const Insights = () => {
   const navigate = useNavigate();
-  const { isGuest, user } = useAuth();
+  const { user } = useAuth();
   const { vibeIq, lessonsCompleted, activityLog } = useProgress();
-  const showBanner = isGuest || !user;
+  const showBanner = !user;
 
   // Compute dynamic stats from real data
   const scenarioScores = activityLog
