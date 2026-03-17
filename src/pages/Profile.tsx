@@ -1,11 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useRef } from "react";
 import {
-  ArrowLeft,
   ChevronRight,
-  Bell,
   Moon,
-  Globe,
   Shield,
   HelpCircle,
   LogOut,
@@ -27,15 +24,15 @@ import LoginBanner from "@/components/LoginBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { PasswordInput } from "@/components/PasswordInput";
 import { HeaderPage } from "@/components/HeaderPage";
 
 const LEVEL_NAMES = ["Natural Flow", "The Specialist", "The Collaborator", "The Influencer"];
@@ -54,6 +51,8 @@ const Profile = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const displayName = showBanner
@@ -167,6 +166,17 @@ const Profile = () => {
     setDeleting(true);
 
     try {
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: user.email!,
+        password: deletePassword,
+      });
+
+      if (authError) {
+        setPasswordError("Incorrect password. Please try again.");
+        setDeleting(false);
+        return;
+      }
+
       const res = await supabase.functions.invoke("delete-account");
 
       console.log("DELETE_ACCOUNT_RESPONSE:", res);
@@ -182,6 +192,8 @@ const Profile = () => {
     } finally {
       setDeleting(false);
       setShowDeleteDialog(false);
+      setDeletePassword("");
+      setPasswordError("");
     }
   };
 
@@ -422,27 +434,55 @@ const Profile = () => {
         </p>
       </main>
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Account</AlertDialogTitle>
-            <AlertDialogDescription>
+      <Dialog
+        open={showDeleteDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeletePassword("");
+            setPasswordError("");
+          }
+          setShowDeleteDialog(open);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Account</DialogTitle>
+            <DialogDescription>
               This action cannot be undone. All your progress, streaks, and data will be permanently
-              deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteAccount}
+              deleted. Enter your password to confirm.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Password</label>
+            <PasswordInput
+              value={deletePassword}
+              onChange={(e) => {
+                setDeletePassword(e.target.value);
+                setPasswordError("");
+              }}
+              placeholder="Enter your password"
               disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            />
+            {passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAccount}
+              disabled={deleting || !deletePassword}
             >
               {deleting ? "Deleting..." : "Delete Account"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 };
