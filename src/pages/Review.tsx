@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, RotateCcw, Check, PartyPopper } from "lucide-react";
+import { ArrowLeft, PartyPopper } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import { useReview, IReviewCard, ReviewRating } from "@/hooks/useReview";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,6 +10,7 @@ import { useProgress } from "@/hooks/useProgress";
 import { modules } from "@/data/modules";
 import { ReviewCard } from "@/components/review/ReviewCard";
 import { ReviewProgressBar } from "@/components/review/ReviewProgressBar";
+import { HeaderPage } from "@/components/HeaderPage";
 
 const GUEST_CARD: IReviewCard = {
   id: "guest-preview",
@@ -61,39 +62,34 @@ const Review = () => {
 
   return (
     <AppLayout>
-      <header className="flex items-center gap-3 px-5 pb-4 pt-6 md:mx-auto md:w-full md:max-w-[900px]">
-        <button onClick={() => navigate(-1)} className="-ml-2 rounded-full p-2">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div>
-          <h1 className="text-lg font-medium">Review</h1>
-          <p className="text-sm text-muted-foreground">
-            {totalCards} cards total · {dueCards.length} due now
-          </p>
-        </div>
-      </header>
-
+      <HeaderPage
+        handleBack={() => navigate(-1)}
+        title="Review"
+        subtitle={`${totalCards} cards total · ${dueCards.length} due now`}
+      />
+      
       <main className="relative px-5 pb-24 md:mx-auto md:w-full md:max-w-[900px]">
         {!user && <LoginBanner className="-top-2" />}
 
         {/* Progress bar */}
-        {totalDue > 0 || isGuest && (
-          <ReviewProgressBar reviewedCount={reviewedCount} totalDue={totalDue} />
-          // <div className="mb-6">
-          //   <div className="mb-1.5 flex justify-between text-xs text-muted-foreground">
-          //     <span>{reviewedCount} reviewed</span>
-          //     <span>{dueCards.length} remaining</span>
-          //   </div>
-          //   <div className="h-2 overflow-hidden rounded-full bg-secondary">
-          //     <motion.div
-          //       className="h-full rounded-full bg-cta"
-          //       initial={{ width: 0 }}
-          //       animate={{ width: totalDue > 0 ? `${(reviewedCount / totalDue) * 100}%` : "0%" }}
-          //       transition={{ duration: 0.4 }}
-          //     />
-          //   </div>
-          // </div>
-        )}
+        {totalDue > 0 ||
+          (isGuest && (
+            <ReviewProgressBar reviewedCount={reviewedCount} totalDue={totalDue} />
+            // <div className="mb-6">
+            //   <div className="mb-1.5 flex justify-between text-xs text-muted-foreground">
+            //     <span>{reviewedCount} reviewed</span>
+            //     <span>{dueCards.length} remaining</span>
+            //   </div>
+            //   <div className="h-2 overflow-hidden rounded-full bg-secondary">
+            //     <motion.div
+            //       className="h-full rounded-full bg-cta"
+            //       initial={{ width: 0 }}
+            //       animate={{ width: totalDue > 0 ? `${(reviewedCount / totalDue) * 100}%` : "0%" }}
+            //       transition={{ duration: 0.4 }}
+            //     />
+            //   </div>
+            // </div>
+          ))}
 
         <AnimatePresence mode="wait">
           {isGuest ? (

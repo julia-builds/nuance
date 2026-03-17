@@ -87,7 +87,7 @@ const Index = () => {
               </span>
             )}
           </button>
-          {showAvatar ? (
+          {user ? (
             <div onClick={() => navigate("/profile")} className="cursor-pointer">
               <LetterAvatar
                 name={profile?.display_name}
@@ -109,15 +109,11 @@ const Index = () => {
 
       <main className="space-y-7 px-5 md:mx-auto md:w-full md:max-w-[900px]">
         <LearningPath />
-        
+
         <section>
           <h2 className="mb-3 text-xl font-medium">{continueTitle}</h2>
           <div className="overflow-hidden rounded-2xl bg-card shadow-sm">
-            <img
-              alt="Lesson"
-              className="h-40 w-full object-cover"
-              src={imageLesson}
-            />
+            <img alt="Lesson" className="h-40 w-full object-cover" src={imageLesson} />
             <div className="p-4 text-sm">
               <h3 className="mb-1 text-base font-medium">{continueSubtitle}</h3>
               <p className="mb-3 text-base text-muted-foreground lg:text-base">

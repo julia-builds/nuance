@@ -357,19 +357,19 @@ const SocialTranslator = ({ open, onClose }: SocialTranslatorProps) => {
         ))}
       </div>
 
-      {/* Translate Button */}
       {!isLimitReached && requestsLeft <= 2 && (
-        <p className="text-xs text-muted-foreground text-right mb-2">
-          {requestsLeft} AI {requestsLeft === 1 ? "request" : "requests"} remaining today
+        <p className="text-base text-muted-foreground text-right mb-2">
+          {requestsLeft} {requestsLeft === 1 ? "request" : "requests"} remaining today
         </p>
       )}
 
+      {/* Translate Button */}
       {isLimitReached ? (
         <div className="w-full py-4 rounded-xl bg-muted border border-border text-center">
-          <p className="font-semibold text-muted-foreground text-base">
+          <p className="font-semibold text-muted-foreground text-lg">
             Daily limit reached ({requestsLimit} requests/day)
           </p>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <p className="text-base text-muted-foreground mt-0.5">
             {isGuest ? "Sign up for more daily requests" : "Resets at midnight"}
           </p>
           {isGuest && (

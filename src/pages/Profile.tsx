@@ -36,15 +36,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { HeaderPage } from "@/components/HeaderPage";
 
 const LEVEL_NAMES = ["Natural Flow", "The Specialist", "The Collaborator", "The Influencer"];
 
 const Profile = () => {
   const navigate = useNavigate();
   const { theme, toggle: toggleTheme } = useTheme();
-  const { isGuest, user, profile, signOut, refreshProfile } = useAuth();
+  const { user, profile, signOut, refreshProfile } = useAuth();
   const { streakDays, modulesCompleted, vibeIq } = useProgress();
-  const showBanner = isGuest || !user;
+  const showBanner = !user;
 
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState("");
@@ -191,166 +192,160 @@ const Profile = () => {
 
   return (
     <AppLayout>
-      <header className="flex items-center gap-3 px-5 pb-4 pt-6 md:mx-auto md:w-full md:max-w-[900px]">
-        <button onClick={() => navigate("/")} className="-ml-2 rounded-full p-2">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="text-lg font-semibold">Profile</h1>
-      </header>
+      <HeaderPage handleBack={() => navigate("/")} title="Profile" />
 
       <main className="space-y-6 overflow-hidden px-5 pb-8 md:mx-auto md:w-full md:max-w-[900px]">
         <div className="relative flex-1">
+          {showBanner && <LoginBanner className="-top-2" />}
 
-        {showBanner && <LoginBanner className="-top-2" />}
-
-        <section className="flex flex-col items-center pt-2 text-center">
-          <div className="group relative mb-3 pb-[16px]">
-            <div
-              className="cursor-pointer rounded-full md:cursor-default"
-              onClick={() => {
-                if (window.innerWidth < 768 && !showBanner) {
-                  setShowAvatarMenu((v) => !v);
-                }
-              }}
-            >
-              <LetterAvatar
-                name={showBanner ? "U" : profile?.display_name}
-                email={showBanner ? undefined : user?.email}
-                avatarUrl={showBanner ? undefined : profile?.avatar_url}
-                size="lg"
-                />
-            </div>
-            {!showBanner && (
-              <>
-                {/* Desktop: centered edit overlay on hover */}
-                <button
-                  onClick={() => setShowAvatarMenu((v) => !v)}
-                  disabled={uploadingAvatar}
-                  className="absolute inset-0 m-auto hidden h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-md transition-opacity disabled:opacity-50 group-hover:opacity-100 md:flex"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
-                {showAvatarMenu && (
-                  <div className="absolute -bottom-20 left-1/2 z-10 min-w-[160px] -translate-x-1/2 rounded-xl border border-border bg-card py-1 shadow-lg">
-                    <button
-                      onClick={() => {
-                        setShowAvatarMenu(false);
-                        fileInputRef.current?.click();
-                      }}
-                      className="flex w-full items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
-                    >
-                      <Camera className="h-4 w-4 text-muted-foreground" />
-                      Upload photo
-                    </button>
-                    {profile?.avatar_url && (
-                      <button
-                      onClick={async () => {
-                        setShowAvatarMenu(false);
-                        if (!user) return;
-                        setUploadingAvatar(true);
-                        await supabase.storage.from("avatars").remove([`${user.id}/avatar`]);
-                          const { error } = await supabase
-                            .from("profiles")
-                            .update({ avatar_url: null })
-                            .eq("id", user.id);
-                            setUploadingAvatar(false);
-                          if (error) {
-                            toast.error("Failed to remove photo");
-                          } else {
-                            toast.success("Photo removed");
-                            await refreshProfile();
-                          }
-                        }}
-                        className="flex w-full items-center gap-2 px-4 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-muted"
-                        >
-                        <Trash2 className="h-4 w-4" />
-                        Remove photo
-                      </button>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleAvatarUpload}
-            />
-          </div>
-
-          {editingName ? (
-            <div className="mt-1 flex items-center gap-2">
-              <input
-                value={nameValue}
-                onChange={(e) => setNameValue(e.target.value)}
-                maxLength={50}
-                autoFocus
-                placeholder="Enter your name"
-                className="w-48 rounded-lg border border-border bg-muted px-3 py-1.5 text-center text-base font-semibold focus:outline-none focus:ring-2 focus:ring-accent"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSaveName();
-                  if (e.key === "Escape") setEditingName(false);
+          <section className="flex flex-col items-center pb-6 pt-2 text-center">
+            <div className="group relative mb-3 pb-[16px]">
+              <div
+                className="cursor-pointer rounded-full md:cursor-default"
+                onClick={() => {
+                  if (window.innerWidth < 768 && !showBanner) {
+                    setShowAvatarMenu((v) => !v);
+                  }
                 }}
-                />
-
-              <button
-                onClick={handleSaveName}
-                disabled={savingName}
-                className="rounded-lg bg-cta px-3 py-1.5 text-sm font-medium text-cta-foreground disabled:opacity-50"
-                >
-                {savingName ? "..." : "Save"}
-              </button>
-              <button
-                onClick={() => setEditingName(false)}
-                className="rounded-lg bg-muted px-3 py-1.5 text-sm font-medium text-muted-foreground"
               >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex items-center gap-1.5">
-                <h2 className="text-xl font-semibold">{displayName}</h2>
-                {!showBanner && (
-                  <button
-                    onClick={handleEditName}
-                    className="rounded-full p-1 transition-colors hover:bg-muted"
-                  >
-                    <Pencil className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                )}
+                <LetterAvatar
+                  name={showBanner ? "U" : profile?.display_name}
+                  email={showBanner ? undefined : user?.email}
+                  avatarUrl={showBanner ? undefined : profile?.avatar_url}
+                  size="lg"
+                />
               </div>
               {!showBanner && (
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  This name appears on the leaderboard and in your activity
-                </p>
+                <>
+                  {/* Desktop: centered edit overlay on hover */}
+                  <button
+                    onClick={() => setShowAvatarMenu((v) => !v)}
+                    disabled={uploadingAvatar}
+                    className="absolute inset-0 m-auto hidden h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-md transition-opacity disabled:opacity-50 group-hover:opacity-100 md:flex"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  {showAvatarMenu && (
+                    <div className="absolute -bottom-20 left-1/2 z-10 min-w-[160px] -translate-x-1/2 rounded-xl border border-border bg-card py-1 shadow-lg">
+                      <button
+                        onClick={() => {
+                          setShowAvatarMenu(false);
+                          fileInputRef.current?.click();
+                        }}
+                        className="flex w-full items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+                      >
+                        <Camera className="h-4 w-4 text-muted-foreground" />
+                        Upload photo
+                      </button>
+                      {profile?.avatar_url && (
+                        <button
+                          onClick={async () => {
+                            setShowAvatarMenu(false);
+                            if (!user) return;
+                            setUploadingAvatar(true);
+                            await supabase.storage.from("avatars").remove([`${user.id}/avatar`]);
+                            const { error } = await supabase
+                              .from("profiles")
+                              .update({ avatar_url: null })
+                              .eq("id", user.id);
+                            setUploadingAvatar(false);
+                            if (error) {
+                              toast.error("Failed to remove photo");
+                            } else {
+                              toast.success("Photo removed");
+                              await refreshProfile();
+                            }
+                          }}
+                          className="flex w-full items-center gap-2 px-4 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-muted"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Remove photo
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
             </div>
-          )}
-          <p className="mt-0.5 text-sm text-muted-foreground">{displayEmail}</p>
-          <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-3 py-1 text-sm font-medium text-accent">
-            <Award className="h-[16px] w-[16px]" />
-            {levelName}
-          </span>
-        </section>
 
-        <section className="grid grid-cols-3 gap-3">
-          {quickStats.map((stat) => (
-            <div
-            key={stat.label}
-            className="flex flex-col items-center rounded-2xl bg-card p-4 text-center shadow-sm"
-            >
-              <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                <stat.icon className="h-5 w-5 text-muted-foreground" />
+            {editingName ? (
+              <div className="mt-1 flex items-center gap-2">
+                <input
+                  value={nameValue}
+                  onChange={(e) => setNameValue(e.target.value)}
+                  maxLength={50}
+                  autoFocus
+                  placeholder="Enter your name"
+                  className="w-48 rounded-lg border border-border bg-muted px-3 py-1.5 text-center text-base font-semibold focus:outline-none focus:ring-2 focus:ring-accent"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSaveName();
+                    if (e.key === "Escape") setEditingName(false);
+                  }}
+                />
+
+                <button
+                  onClick={handleSaveName}
+                  disabled={savingName}
+                  className="rounded-lg bg-cta px-3 py-1.5 text-sm font-medium text-cta-foreground disabled:opacity-50"
+                >
+                  {savingName ? "..." : "Save"}
+                </button>
+                <button
+                  onClick={() => setEditingName(false)}
+                  className="rounded-lg bg-muted px-3 py-1.5 text-sm font-medium text-muted-foreground"
+                >
+                  Cancel
+                </button>
               </div>
-              <span className="text-xl font-semibold">{stat.value}</span>
-              <span className="mt-0.5 text-sm text-muted-foreground">{stat.label}</span>
-            </div>
-          ))}
-        </section>
-            </div>
+            ) : (
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex items-center gap-1.5">
+                  <h2 className="text-xl font-semibold">{displayName}</h2>
+                  {!showBanner && (
+                    <button
+                      onClick={handleEditName}
+                      className="rounded-full p-1 transition-colors hover:bg-muted"
+                    >
+                      <Pencil className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  )}
+                </div>
+                {!showBanner && (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    This name appears on the leaderboard and in your activity
+                  </p>
+                )}
+              </div>
+            )}
+            <p className="mt-0.5 text-sm text-muted-foreground">{displayEmail}</p>
+            <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-3 py-1 text-sm font-medium text-accent">
+              <Award className="h-[16px] w-[16px]" />
+              {levelName}
+            </span>
+          </section>
+
+          <section className="grid grid-cols-3 gap-3">
+            {quickStats.map((stat) => (
+              <div
+                key={stat.label}
+                className="flex flex-col items-center rounded-2xl bg-card p-4 text-center shadow-sm"
+              >
+                <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                  <stat.icon className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <span className="text-xl font-semibold">{stat.value}</span>
+                <span className="mt-0.5 text-sm text-muted-foreground">{stat.label}</span>
+              </div>
+            ))}
+          </section>
+        </div>
 
         <section>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">

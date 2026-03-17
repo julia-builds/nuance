@@ -2,30 +2,25 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Target, Clock, Zap, TrendingUp } from "lucide-react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { useEffect } from "react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer } from
-"recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import AppLayout from "@/components/AppLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useProgress } from "@/hooks/useProgress";
 import LoginBanner from "@/components/LoginBanner";
 import Leaderboard from "@/components/Leaderboard";
+import { HeaderPage } from "@/components/HeaderPage";
 
 const TONE_COLORS = ["hsl(152, 40%, 46%)", "hsl(228, 80%, 56%)"];
 
-
 // ---------- Vibe Meter SVG ----------
 
-const VibeMeter = ({ score }: {score: number;}) => {
+const VibeMeter = ({ score }: { score: number }) => {
   const cx = 110;
   const cy = 110;
   const r = 90;
 
   // Animate a single value (angle in radians) from π to target
-  const targetTheta = Math.PI - score / 100 * Math.PI;
+  const targetTheta = Math.PI - (score / 100) * Math.PI;
   const theta = useMotionValue(Math.PI); // start at left (Blunt)
 
   const circleX = useTransform(theta, (t) => cx + r * Math.cos(t));
@@ -36,21 +31,16 @@ const VibeMeter = ({ score }: {score: number;}) => {
       type: "spring",
       stiffness: 40,
       damping: 12,
-      delay: 0.3
+      delay: 0.3,
     });
     return controls.stop;
   }, [targetTheta, theta]);
 
   return (
-    <div className="w-full max-w-[320px] mx-auto">
+    <div className="mx-auto w-full max-w-[320px]">
       <div className="relative flex items-center justify-center">
         {/* Radial gradient background */}
-        
 
-
-
-
-        
         <svg viewBox="0 0 220 138" className="w-full overflow-visible">
           <defs>
             <linearGradient id="vibe-arc" x1="0" y1="0" x2="1" y2="0">
@@ -70,8 +60,8 @@ const VibeMeter = ({ score }: {score: number;}) => {
             fill="none"
             stroke="url(#vibe-arc)"
             strokeWidth="22"
-            strokeLinecap="round" />
-          
+            strokeLinecap="round"
+          />
 
           {/* Indicator circle — follows the arc via motion values */}
           <motion.circle
@@ -80,8 +70,8 @@ const VibeMeter = ({ score }: {score: number;}) => {
             stroke="hsl(var(--card))"
             strokeWidth="3"
             cx={circleX}
-            cy={circleY} />
-          
+            cy={circleY}
+          />
 
           {/* Labels */}
           <text x="6" y="132" fontSize="9" fill="hsl(var(--muted-foreground))" textAnchor="start">
@@ -94,12 +84,12 @@ const VibeMeter = ({ score }: {score: number;}) => {
       </div>
 
       {/* Score below the meter */}
-      <div className="flex flex-col items-center -mt-6">
+      <div className="-mt-6 flex flex-col items-center">
         <span className="text-4xl font-semibold">{score}</span>
-        <span className="text-muted-foreground text-sm">Lifetime Vibe IQ</span>
+        <span className="text-sm text-muted-foreground">Lifetime Vibe IQ</span>
       </div>
-    </div>);
-
+    </div>
+  );
 };
 
 // ---------- Page ----------
@@ -111,13 +101,17 @@ const Insights = () => {
   const showBanner = isGuest || !user;
 
   // Compute dynamic stats from real data
-  const scenarioScores = activityLog.
-  filter((a) => a.activity_type === "scenario_complete" && a.vibe_score).
-  map((a) => a.vibe_score!);
-  const masteryAverage = scenarioScores.length > 0 ?
-  (scenarioScores.reduce((a, b) => a + b, 0) / scenarioScores.length / 20).toFixed(1) :
-  "0.0";
-  const firstTimeAccuracy = lessonsCompleted > 0 ? Math.min(100, Math.round(lessonsCompleted / (lessonsCompleted + 2) * 100)) : 0;
+  const scenarioScores = activityLog
+    .filter((a) => a.activity_type === "scenario_complete" && a.vibe_score)
+    .map((a) => a.vibe_score!);
+  const masteryAverage =
+    scenarioScores.length > 0
+      ? (scenarioScores.reduce((a, b) => a + b, 0) / scenarioScores.length / 20).toFixed(1)
+      : "0.0";
+  const firstTimeAccuracy =
+    lessonsCompleted > 0
+      ? Math.min(100, Math.round((lessonsCompleted / (lessonsCompleted + 2)) * 100))
+      : 0;
   const learningMinutes = lessonsCompleted * 8;
   const learningHours = Math.floor(learningMinutes / 60);
   const learningMins = learningMinutes % 60;
@@ -125,16 +119,12 @@ const Insights = () => {
 
   return (
     <AppLayout>
-      {/* Header */}
-      <header className="flex items-center gap-3 px-5 pb-4 pt-6 md:mx-auto md:w-full md:max-w-[900px]">
-        <button onClick={() => navigate("/")} className="-ml-2 rounded-full p-2">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="text-lg font-semibold">Insights</h1>
-      </header>
+    
+      <HeaderPage handleBack={() => navigate("/")} title="Insights" />
+  
 
       <main className="relative space-y-6 px-5 pb-8 md:mx-auto md:w-full md:max-w-[900px]">
-          {showBanner && <LoginBanner />}
+        {showBanner && <LoginBanner />}
         {/* ========= HERO: Vibe IQ Mastery + Tone Profile (side by side) ========= */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* Left card: Vibe IQ Mastery */}
@@ -310,7 +300,6 @@ const Insights = () => {
       </main>
     </AppLayout>
   );
-
 };
 
 export default Insights;
